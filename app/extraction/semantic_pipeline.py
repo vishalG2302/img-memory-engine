@@ -7,7 +7,8 @@ from app.models.image_entity_map import ImageEntityMap
 from app.extraction.semantic_service import extract_semantic
 from app.normalization.entity_normalizer import normalize_entity
 from app.extraction.vector_pipeline import process_vector_layer
-
+from itertools import combinations
+from app.models.entity_relation import EntityRelation
 
 def process_semantic_layer(image_id: str):
     db = SessionLocal()
@@ -72,7 +73,7 @@ def process_semantic_layer(image_id: str):
 
             print(f"Saving entity: {name}")
 
-            entity_id = normalize_entity(name, entity_type)
+            entity_id = normalize_entity(db, name, entity_type)
 
             existing_map = db.query(ImageEntityMap).filter(
                 ImageEntityMap.image_id == image_id,
@@ -86,6 +87,30 @@ def process_semantic_layer(image_id: str):
                     relation_type="contains"
                 )
                 db.add(mapping)
+
+        db.commit()
+
+        # 🔹 Process entities-relation
+
+        entity_ids = [normalize_entity(db, e.get("name"), e.get("type", "concept"))
+              for e in entities if e.get("name")]
+
+        for e1, e2 in combinations(sorted(entity_ids), 2):
+
+            existing_relation = db.query(EntityRelation).filter(
+                EntityRelation.entity1_id == e1,
+                EntityRelation.entity2_id == e2
+            ).first()
+
+            if existing_relation:
+                existing_relation.weight += 1
+            else:
+                relation = EntityRelation(
+                    entity1_id=e1,
+                    entity2_id=e2,
+                    weight=1
+                )
+                db.add(relation)
 
         db.commit()
 

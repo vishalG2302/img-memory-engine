@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Image Memory Engine — Upload images, search your memories, and explore your knowledge graph.">
+  <title>🧠 Image Memory Engine</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+
+  <!-- =============== HEADER =============== -->
+  <header class="header">
+    <h1 class="header-title">🧠 Image Memory Engine</h1>
+    <p class="header-subtitle">Upload pictures, search your memories, and see how everything connects!</p>
+  </header>
+
+  <!-- =============== TAB NAVIGATION =============== -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="upload" id="tab-upload">
+      <span class="tab-emoji">📷</span>
+      <span class="tab-label">Upload</span>
+    </button>
+    <button class="tab-btn" data-tab="search" id="tab-search">
+      <span class="tab-emoji">🔍</span>
+      <span class="tab-label">Search</span>
+    </button>
+    <button class="tab-btn" data-tab="graph" id="tab-graph">
+      <span class="tab-emoji">🕸️</span>
+      <span class="tab-label">Memory Map</span>
+    </button>
+  </nav>
+
+  <!-- =============== MAIN CONTENT =============== -->
+  <main class="main-content">
+
+    <!-- ===== UPLOAD PANEL ===== -->
+    <section class="tab-panel active" id="panel-upload">
+      <div class="glass-card">
+        <h2 class="section-title">📷 Upload a Memory</h2>
+        <p class="section-desc">Drop your picture here and our AI will remember everything in it!</p>
+
+        <!-- Drop Zone -->
+        <div class="upload-zone" id="upload-zone">
+          <span class="upload-icon">🖼️</span>
+          <div class="upload-text">Drag & drop your image here</div>
+          <div class="upload-hint">or click to pick one from your computer</div>
+          <input type="file" accept="image/*" class="upload-input" id="upload-input">
+        </div>
+
+        <!-- Preview -->
+        <div class="upload-preview" id="upload-preview">
+          <img class="preview-thumb" id="preview-thumb" src="" alt="Preview">
+          <div class="preview-info">
+            <div class="preview-name" id="preview-name"></div>
+            <div class="preview-size" id="preview-size"></div>
+          </div>
+          <button class="preview-remove" id="preview-remove">✕ Remove</button>
+        </div>
+
+        <!-- Form Inputs -->
+        <div class="upload-form-row">
+          <input class="form-input" type="text" id="input-userid" placeholder="👤 Your name (optional)" value="">
+          <input class="form-input" type="text" id="input-source" placeholder="📌 Source (optional)" value="">
+          <button class="btn-upload" id="btn-upload" disabled>
+            <span>🚀</span> Upload
+          </button>
+        </div>
+
+        <!-- Upload Status -->
+        <div class="upload-status" id="upload-status"></div>
+      </div>
+    </section>
+
+    <!-- ===== SEARCH PANEL ===== -->
+    <section class="tab-panel" id="panel-search">
+      <div class="glass-card">
+        <h2 class="section-title">🔍 Search Your Memories</h2>
+        <p class="section-desc">Describe what you're looking for and we'll find matching images!</p>
+
+        <div class="search-bar">
+          <input class="search-input" type="text" id="search-input" placeholder="What do you remember? Try: cat, sunset, homework...">
+          <button class="btn-search" id="btn-search">
+            <span>🔍</span> Search
+          </button>
+        </div>
+
+        <div class="search-results" id="search-results">
+          <div class="search-empty">
+            <span class="search-empty-icon">🌟</span>
+            <div>Type something above and hit Search!</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== GRAPH PANEL ===== -->
+    <section class="tab-panel" id="panel-graph">
+      <div class="glass-card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 24px 28px 16px;">
+          <h2 class="section-title">🕸️ Your Memory Map</h2>
+          <p class="section-desc" style="margin-bottom: 0;">See how all your images and ideas connect together!</p>
+        </div>
+
+        <div class="graph-container">
+          <div class="graph-canvas" id="graph-canvas">
+            <div class="graph-empty">
+              <span class="graph-empty-icon">🌌</span>
+              <div>Click here to load your memory map!</div>
+            </div>
+          </div>
+          <div class="graph-legend">
+            <span class="legend-item"><span class="legend-dot image"></span> Images</span>
+            <span class="legend-item"><span class="legend-dot entity"></span> Concepts</span>
+            <span class="legend-item"><span class="legend-dot edge"></span> Connections</span>
+          </div>
+          <div class="graph-stats" id="graph-stats"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
