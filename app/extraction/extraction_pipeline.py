@@ -20,17 +20,18 @@ def process_image_extraction(image_id: str):
     # Run sensory extraction
     ocr_text = run_ocr(image.image_path)
     vision_summary = generate_vision_summary(image.image_path)
-
+    print("=== OCR TEXT ===")
+    print(ocr_text)
+    # Save sensory results
     image.raw_ocr = ocr_text
     image.raw_vision_summary = vision_summary
     image.extraction_status = "completed"
     image.extraction_completed_at = datetime.utcnow()
     image.extraction_model = "sensory_v1"
 
-    process_semantic_layer(image.id)
+    # 🔥 COMMIT BEFORE CALLING SEMANTIC
     db.commit()
     db.close()
 
-
-
-
+    # Now semantic layer sees updated data
+    process_semantic_layer(image_id)

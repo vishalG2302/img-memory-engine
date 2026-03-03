@@ -28,11 +28,15 @@ def ingest_image(file: UploadFile, user_id: str, source: str = None):
     )
 
     db.add(episode)
+    image_id = image.id
     db.commit()
     db.close()
 
-    process_image_extraction(image.id)
-    return image.id
+    process_image_extraction(image_id)
+    return image_id
+
+      # Save ID before closing session
+
 
 
 

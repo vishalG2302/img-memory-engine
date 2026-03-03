@@ -1,46 +1,3 @@
-# import json
-# from app.database import SessionLocal
-# from app.models.image_raw import ImageRaw
-# from app.models.image_semantic import ImageSemantic
-# from app.models.image_entity_map import ImageEntityMap
-# from app.extraction.semantic_service import extract_semantic
-# from app.normalization.entity_normalizer import normalize_entity
-
-# def process_semantic_layer(image_id: str):
-#     db = SessionLocal()
-
-#     image = db.query(ImageRaw).filter(ImageRaw.id == image_id).first()
-#     if not image or not image.raw_ocr:
-#         db.close()
-#         return
-
-#     semantic_data = extract_semantic(image.raw_ocr, image.raw_vision_summary)
-
-#     semantic = ImageSemantic(
-#         image_id=image_id,
-#         summary=semantic_data["summary"],
-#         intent=semantic_data["intent"],
-#         attributes=json.dumps(semantic_data["attributes"])
-#     )
-
-#     db.add(semantic)
-#     db.commit()
-
-#     for entity in semantic_data["entities"]:
-#         entity_id = normalize_entity(entity["name"], entity["type"])
-
-#         mapping = ImageEntityMap(
-#             image_id=image_id,
-#             entity_id=entity_id,
-#             relation_type="contains"
-#         )
-
-#         db.add(mapping)
-
-#     db.commit()
-#     db.close()
-
-
 import json
 from sqlalchemy.exc import SQLAlchemyError
 from app.database import SessionLocal
@@ -56,33 +13,47 @@ def process_semantic_layer(image_id: str):
     db = SessionLocal()
 
     try:
-        #  Get raw image
+        # 🔹 Fetch image
         image = db.query(ImageRaw).filter(ImageRaw.id == image_id).first()
-        if not image or not image.raw_ocr:
+        if not image:
+            print("Image not found.")
             return
 
-        #  Run semantic extraction
+        print("=== RAW OCR ===")
+        print(image.raw_ocr)
+
+        print("=== RAW VISION SUMMARY ===")
+        print(image.raw_vision_summary)
+
+        # 🔹 Run semantic extraction
         semantic_data = extract_semantic(
             image.raw_ocr,
             image.raw_vision_summary
         )
 
-        # Check if semantic already exists (avoid duplicates)
+        print("=== LLM SEMANTIC OUTPUT ===")
+        print(semantic_data)
+
+        entities = semantic_data.get("entities", [])
+        print("=== ENTITIES FOUND ===")
+        print(entities)
+
+        # 🔹 Save semantic summary
         existing_semantic = db.query(ImageSemantic).filter(
             ImageSemantic.image_id == image_id
         ).first()
 
         if existing_semantic:
-            existing_semantic.summary = semantic_data["summary"]
-            existing_semantic.intent = semantic_data["intent"]
+            existing_semantic.summary = semantic_data.get("summary", "")
+            existing_semantic.intent = semantic_data.get("intent", "")
             existing_semantic.attributes = json.dumps(
                 semantic_data.get("attributes", {})
             )
         else:
             semantic = ImageSemantic(
                 image_id=image_id,
-                summary=semantic_data["summary"],
-                intent=semantic_data["intent"],
+                summary=semantic_data.get("summary", ""),
+                intent=semantic_data.get("intent", ""),
                 attributes=json.dumps(
                     semantic_data.get("attributes", {})
                 )
@@ -91,14 +62,18 @@ def process_semantic_layer(image_id: str):
 
         db.commit()
 
-        #  Process entities safely
-        for entity in semantic_data.get("entities", []):
-            entity_id = normalize_entity(
-                entity["name"],
-                entity["type"]
-            )
+        # 🔹 Process entities
+        for entity in entities:
+            name = entity.get("name", "").strip()
+            entity_type = entity.get("type", "concept")
 
-            # Avoid duplicate mappings
+            if not name:
+                continue
+
+            print(f"Saving entity: {name}")
+
+            entity_id = normalize_entity(name, entity_type)
+
             existing_map = db.query(ImageEntityMap).filter(
                 ImageEntityMap.image_id == image_id,
                 ImageEntityMap.entity_id == entity_id
@@ -121,5 +96,7 @@ def process_semantic_layer(image_id: str):
     finally:
         db.close()
 
-    #  Trigger vector layer AFTER DB closed
+    print(f"Semantic layer processed for image {image_id}")
+
+    # 🔹 Trigger vector layer AFTER DB closes
     process_vector_layer(image_id)

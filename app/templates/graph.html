@@ -1,0 +1,65 @@
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    #network {
+      width: 100%;
+      height: 800px;
+      border: 1px solid lightgray;
+      background-color: #983939;
+    }
+  </style>
+</head>
+<body>
+
+<div id="network"></div>
+
+<script>
+fetch("/api/graph")
+  .then(res => {
+    if (!res.ok) throw new Error("API failed");
+    return res.json();
+  })
+  .then(data => {
+    console.log("Graph Data:", data);
+
+    const container = document.getElementById("network");
+
+    const nodes = new vis.DataSet(
+      data.nodes.map(n => ({
+        id: n.id,
+        label: n.label,
+        color: n.type === "image" ? "#1f77b4" : "#2ca02c",
+        font: { color: "white" }
+      }))
+    );
+
+    const edges = new vis.DataSet(
+      data.edges.map(e => ({
+        from: e.from,
+        to: e.to,
+        arrows: "to",
+        width: 2
+      }))
+    );
+
+    const options = {
+      physics: {
+        stabilization: true
+      },
+      nodes: {
+        shape: "dot",
+        size: 20
+      }
+    };
+
+    new vis.Network(container, { nodes, edges }, options);
+  })
+  .catch(err => {
+    console.error("Graph error:", err);
+  });
+</script>
+
+</body>
+</html> {% endcomment %}
